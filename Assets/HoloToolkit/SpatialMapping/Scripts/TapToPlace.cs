@@ -1,6 +1,9 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿using System;
+using HoloToolkit.Sharing;
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using HoloToolkit.Sharing.Tests;
 using HoloToolkit.Unity.InputModule;
 using UnityEngine;
 
@@ -49,6 +52,9 @@ namespace HoloToolkit.Unity.SpatialMapping
 
         protected virtual void Start()
         {
+
+            //added
+            CustomMessages.Instance.MessageHandlers[CustomMessages.TestMessageID.NewPlacement] = UpdatePosition;
             // Make sure we have all the components in the scene we need.
             anchorManager = WorldAnchorManager.Instance;
             if (anchorManager == null)
@@ -83,6 +89,24 @@ namespace HoloToolkit.Unity.SpatialMapping
             }
         }
 
+        /// <summary>
+        /// added
+        /// </summary>
+        /// <param name="msg"></param>
+        private void UpdatePosition(NetworkInMessage msg)
+        {
+            // Parse the message
+            long userID = msg.ReadInt64();
+
+            Vector3 newPos = CustomMessages.Instance.ReadVector3(msg);
+
+            Quaternion newRot = CustomMessages.Instance.ReadQuaternion(msg);
+
+            this.transform.position = newPos;
+            this.transform.rotation = newRot;
+        }
+    
+
         protected virtual void Update()
         {
             // If the user is in placing mode,
@@ -97,9 +121,9 @@ namespace HoloToolkit.Unity.SpatialMapping
                 if (Physics.Raycast(headPosition, gazeDirection, out hitInfo, 30.0f, spatialMappingManager.LayerMask))
                 {
                     // Rotate this object to face the user.
-                    Quaternion toQuat = Camera.main.transform.localRotation;
-                    toQuat.x = 0;
-                    toQuat.z = 0;
+                    //Quaternion toQuat = Camera.main.transform.localRotation;
+                   // toQuat.x = 0;
+                    //toQuat.z = 0;
 
                     // Move this object to where the raycast
                     // hit the Spatial Mapping mesh.
@@ -112,14 +136,19 @@ namespace HoloToolkit.Unity.SpatialMapping
                         // Place the parent object as well but keep the focus on the current game object
                         Vector3 currentMovement = hitInfo.point - gameObject.transform.position;
                         ParentGameObjectToPlace.transform.position += currentMovement;
-                        ParentGameObjectToPlace.transform.rotation = toQuat;
+                        //ParentGameObjectToPlace.transform.rotation = toQuat;
                     }
                     else
                     {
                         gameObject.transform.position = hitInfo.point;
-                        gameObject.transform.rotation = toQuat;
+                        //gameObject.transform.rotation = toQuat;
                     }
                 }
+            }
+            //added to send position
+            if (IsBeingPlaced)
+            {
+                CustomMessages.Instance.SendNewPlacement(this.transform.position, this.transform.rotation);
             }
         }
 
@@ -131,6 +160,8 @@ namespace HoloToolkit.Unity.SpatialMapping
             // If the user is in placing mode, display the spatial mapping mesh.
             if (IsBeingPlaced)
             {
+
+
                 spatialMappingManager.DrawVisualMeshes = true;
 
                 Debug.Log(gameObject.name + " : Removing existing world anchor if any.");

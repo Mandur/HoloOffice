@@ -59,6 +59,7 @@ namespace HoloToolkit.Sharing.Tests
             Quaternion headRotation = Quaternion.Inverse(transform.rotation) * headTransform.rotation;
 
             CustomMessages.Instance.SendHeadTransform(headPosition, headRotation);
+
         }
 
         protected override void OnDestroy()

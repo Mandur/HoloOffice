@@ -29,7 +29,9 @@ public enum MessageID {
   Profiling,
   InternalSyncMessage,
   RoomAnchor,
-  UserMessageIDStart = 134+50
+  UserMessageIDStart = 134+50, 
+  // Added for new
+  NewPlacement =124+51
 }
 
 }
