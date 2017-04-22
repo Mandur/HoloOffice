@@ -21,8 +21,11 @@ namespace HoloToolkit.Sharing.Tests
         public enum TestMessageID : byte
         {
             HeadTransform = MessageID.UserMessageIDStart,
+            NewPlacement = MessageID.NewPlacement,
             Max
         }
+
+
 
         public enum UserMessageChannels
         {
@@ -117,6 +120,7 @@ namespace HoloToolkit.Sharing.Tests
             msg.Write(messageType);
             // Add the local userID so that the remote clients know whose message they are receiving
             msg.Write(LocalUserID);
+            // Added adding the newPosition
             return msg;
         }
 
@@ -136,6 +140,26 @@ namespace HoloToolkit.Sharing.Tests
                     MessagePriority.Immediate,
                     MessageReliability.UnreliableSequenced,
                     MessageChannel.Avatar);
+            }
+        }
+
+
+        public void SendNewPlacement(Vector3 position, Quaternion rotation)
+        {
+            // If we are connected to a session, broadcast our head info
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                // Create an outgoing network message to contain all the info we want to send
+                NetworkOutMessage msg = CreateMessage((byte)TestMessageID.NewPlacement);
+
+                AppendTransform(msg, position, rotation);
+
+                // Send the message as a broadcast, which will cause the server to forward it to all other users in the session.
+                serverConnection.Broadcast(
+                    msg,
+                    MessagePriority.Immediate,
+                    MessageReliability.UnreliableSequenced,
+                    MessageChannel.RoomAnchorChannel);
             }
         }
 
